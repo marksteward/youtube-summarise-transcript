@@ -1,0 +1,8 @@
+.gcloudignore
+Dockerfile
+deploy.sh
+.env.yaml
+.git
+.gitignore
+pyproject.toml
+poetry.lock

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker run --rm -ti -v "$PWD/gcloud-config:/root/.config/gcloud" --entrypoint=gcloud google/cloud-sdk "$@"
+

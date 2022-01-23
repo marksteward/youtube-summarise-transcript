@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "youtube-transcript-api-function"
+version = "0.1.0"
+description = ""
+authors = ["Mark Steward <marksteward@gmail.com"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+youtube-transcript-api = "^0.4.3"
+functions-framework = "^3.0.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
