@@ -1,3 +1,4 @@
 gcloud-config
 poetry.lock
 __pycache__
+env.prod.yaml

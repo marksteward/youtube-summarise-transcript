@@ -1,21 +1,56 @@
 import functions_framework
 import re
-import requests
+import yaml
+from textwrap import wrap
 
-from youtube_transcript_api._transcripts import TranscriptListFetcher
+import openai
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.formatters import TextFormatter
+
+
+with open("env.yaml", "r") as f:
+    env = yaml.safe_load(f)
+
+openai.api_key = env['openai_key']
 
 @functions_framework.http
-def youtube_transcript_api(request):
-    video_ids = request.args.get('video_ids', '')
-    output = {}
-    with requests.Session() as http_client:
-        fetcher = TranscriptListFetcher(http_client)
+def youtube_summarise_transcript(request):
+    origin = request.headers.get('origin')
+    if '*' in env['allowed_origins']:
+        origin = '*'
 
-        for video_id in video_ids.split(','):
-            if not re.match('[0-9A-Za-z_-]{11}', video_id):
-                continue
-            html = fetcher._fetch_video_html(video_id)
-            output[video_id] = fetcher._extract_captions_json(html, video_id)
+    if not origin:
+        return ('', 401)
+    if origin not in env['allowed_origins']:
+        return ('', 401)
 
-    return output
+    headers = {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET',
+      'Vary': 'Origin',
+    }
+    if request.method == 'OPTIONS':
+        return ('', 204, headers)
+
+    video_id = request.args.get('video_id', '')
+    if not re.match('[0-9A-Za-z_-]{11}', video_id):
+        return ('', 400, headers)
+
+    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    formatter = TextFormatter()
+    transcript_text = formatter.format_transcript(transcript)
+
+    chunks = wrap(transcript_text, 2000 * 4)  # aim for 2000 tokens per chunk
+
+    def summarise(chunk):
+        response = openai.Completion.create(model="text-davinci-002", prompt=f'Summarise:\n\n{chunk}\n\nSummary in under 20 words:', temperature=0, max_tokens=50)
+        return response.choices[0].text.strip()
+
+    summaries = [summarise(c) for c in chunks]
+    if len(summaries) == 1:
+        summary = summaries[0]
+    else:
+        summary = summarise('\n'.join(summaries))
+
+    return ({"tldr": summary}, 200, headers)
 

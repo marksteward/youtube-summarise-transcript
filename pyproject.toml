@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "youtube-transcript-api-function"
+name = "youtube-summarise-transcript-function"
 version = "0.1.0"
 description = ""
 authors = ["Mark Steward <marksteward@gmail.com"]
@@ -8,6 +8,8 @@ authors = ["Mark Steward <marksteward@gmail.com"]
 python = "^3.9"
 youtube-transcript-api = "^0.4.3"
 functions-framework = "^3.0.0"
+PyYAML = "^6.0"
+openai = "^0.23.0"
 
 [tool.poetry.dev-dependencies]
 

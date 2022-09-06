@@ -11,11 +11,14 @@ RUN poetry export --no-interaction --without-hashes --format requirements.txt --
 
 COPY main.py .
 
-ENTRYPOINT ["poetry", "run", "functions-framework", "--target", "youtube_transcript_api", "--debug"]
+ENV PYTHONDONTWRITEBYTECODE=1
+
+ENTRYPOINT ["poetry", "run", "functions-framework", "--target", "youtube_summarise_transcript", "--debug"]
 
 FROM google/cloud-sdk AS deploy
 
 WORKDIR /app
 COPY --from=dev /app/main.py .
 COPY --from=dev /app/requirements.txt .
+COPY env.prod.yaml ./env.yaml
 

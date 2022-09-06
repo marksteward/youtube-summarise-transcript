@@ -1,5 +1,4 @@
 #!/bin/bash
 
-docker run --rm -ti -v "$PWD/gcloud-config:/root/.config/gcloud" --entrypoint=gcloud $(docker build -q --target deploy .) functions deploy youtube_transcript_api --runtime python39 --trigger-http --allow-unauthenticated --region europe-west2 && \
-docker run --rm -ti -v "$PWD/gcloud-config:/root/.config/gcloud" --entrypoint=gcloud $(docker build -q --target deploy .) functions describe youtube_transcript_api --region europe-west2
+docker run --rm -ti -v "$PWD/gcloud-config:/root/.config/gcloud" --entrypoint=gcloud $(docker build -q --target deploy .) functions deploy youtube_summarise_transcript --runtime python39 --trigger-http --allow-unauthenticated --region europe-west2
 
