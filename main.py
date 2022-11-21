@@ -13,8 +13,25 @@ with open("env.yaml", "r") as f:
 
 openai.api_key = env['openai_key']
 
+def summarise(chunk):
+    response = openai.Completion.create(model="text-davinci-002", prompt=f'Summarise:\n\n{chunk}\n\nSummary in under 20 words:', temperature=0, max_tokens=50)
+    return response.choices[0].text.strip()
+
+def characterise(chunk):
+    response = openai.Completion.create(model="text-davinci-002", prompt=f'The following content is of a particular presentation style and genre:\n\n{chunk}\n\nPresentation style and genre in under 20 words:', temperature=0, max_tokens=50)
+    return response.choices[0].text.strip()
+
+
 @functions_framework.http
 def youtube_summarise_transcript(request):
+    return youtube_process_transcript(request, tldr=summarise)
+
+@functions_framework.http
+def youtube_characterise_transcript(request):
+    return youtube_process_transcript(request, genre=characterise)
+
+
+def youtube_process_transcript(request, **processors):
     origin = request.headers.get('origin')
     if '*' in env['allowed_origins']:
         origin = '*'
@@ -42,15 +59,18 @@ def youtube_summarise_transcript(request):
 
     chunks = wrap(transcript_text, 2000 * 4)  # aim for 2000 tokens per chunk
 
-    def summarise(chunk):
-        response = openai.Completion.create(model="text-davinci-002", prompt=f'Summarise:\n\n{chunk}\n\nSummary in under 20 words:', temperature=0, max_tokens=50)
-        return response.choices[0].text.strip()
+    response = {}
+    for (field, processor) in processors.items():
+        try:
+            # TODO: check how much time we've got left
+            results = [processor(c) for c in chunks]
+            if len(results) == 1:
+                response[field] = results[0]
+            else:
+                response[field] = summarise('\n'.join(results))
 
-    summaries = [summarise(c) for c in chunks]
-    if len(summaries) == 1:
-        summary = summaries[0]
-    else:
-        summary = summarise('\n'.join(summaries))
+        except Exception as e:
+            return ({"error": str(e)}, 500, headers)
 
-    return ({"tldr": summary}, 200, headers)
+    return (response, 200, headers)
 
