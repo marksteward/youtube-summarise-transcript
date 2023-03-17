@@ -14,12 +14,27 @@ with open("env.yaml", "r") as f:
 openai.api_key = env['openai_key']
 
 def summarise(chunk):
-    response = openai.Completion.create(model="text-davinci-002", prompt=f'Summarise:\n\n{chunk}\n\nSummary in under 20 words:', temperature=0, max_tokens=50)
-    return response.choices[0].text.strip()
+    """
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+      {"role": "system", "content": "The user will provide a transcript in a series of messages. At the end, I will prompt you to provide a short summary."},
+      {"role": "user", "content": c},
+      {"role": "system", "content": "Now please summarise the above in under 20 words."}
+    ], temperature=0, max_tokens=50)
+    """
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+      {"role": "system", "content": "Summarise the following transcript:"},
+      {"role": "user", "content": chunk},
+      {"role": "system", "content": "Summary in under 20 words:"}
+    ], temperature=0, max_tokens=50)
+    return response.choices[0].message.content.strip()
 
 def characterise(chunk):
-    response = openai.Completion.create(model="text-davinci-002", prompt=f'The following content is of a particular presentation style and genre:\n\n{chunk}\n\nPresentation style and genre in under 20 words:', temperature=0, max_tokens=50)
-    return response.choices[0].text.strip()
+    response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+      {"role": "system", "content": "The following content is of a particular presentation style and genre:"},
+      {"role": "user", "content": chunk},
+      {"role": "system", "content": "Presentation style and genre in under 20 words:"}
+    ], temperature=0, max_tokens=50)
+    return response.choices[0].message.content.strip()
 
 
 @functions_framework.http
